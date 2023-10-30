@@ -6,9 +6,9 @@ app = Flask(__name__)
 # Connect to database
 db.connect_sqlalchemy()
 
-@app.route('/')
-def root():
-    return "This is the API for BasketballLeagueManager"
+#@app.route('/')
+#def root():
+#    return "This is the API for BasketballLeagueManager"
 
 @app.route('/stats/get_stats', methods=['GET'])
 def stats_data():
