@@ -39,10 +39,11 @@ def add_stats():
         data['blocks'],
         data['steals']
     )
+    return jsonify({"message": "Stats added successfully"}), 200
 
 @app.route('/stats/edit_stats', methods=['PUT'])
 def edit_stats():
-    data = request.json()
+    data = request.get_json()
     db.edit_player_stats(
         data['player_id'],
         data['game_id'],
@@ -52,14 +53,16 @@ def edit_stats():
         data['blocks'],
         data['steals']
     )
+    return jsonify({"message": "Stats edited successfully"}), 200
 
 @app.route('/stats/delete_stats', methods=['DELETE'])
 def delete_stats():
-    data = request.json()
+    data = request.get_json()
     db.delete_player_stats(
         data['player_id'],
         data['game_id']
     )
+    return jsonify({"message": "Stats deleted successfully"}), 200
 
 # Main function - connect to DB and start app
 if __name__ == "__main__":

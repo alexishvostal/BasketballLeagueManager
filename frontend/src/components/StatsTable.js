@@ -6,6 +6,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/DeleteOutlined';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Close';
+import axios from 'axios'; // Import Axios
 import {
   GridRowModes,
   DataGrid,
@@ -25,53 +26,41 @@ const randomRole = () => {
   return randomArrayItem(roles);
 };
 
+const player_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+const game_ids = [1];
+
 const initialRows = [
   {
     id: randomId(),
-    name: randomTraderName(),
-    age: 25,
-    joinDate: randomCreatedDate(),
-    role: randomRole(),
+    player_id: 1,
+    game_id: 1,
+    points: 16,
+    assists: 3,
+    rebounds: 4,
+    blocks: 0,
+    steals: 0
   },
   {
     id: randomId(),
-    name: randomTraderName(),
-    age: 36,
-    joinDate: randomCreatedDate(),
-    role: randomRole(),
-  },
-  {
-    id: randomId(),
-    name: randomTraderName(),
-    age: 19,
-    joinDate: randomCreatedDate(),
-    role: randomRole(),
-  },
-  {
-    id: randomId(),
-    name: randomTraderName(),
-    age: 28,
-    joinDate: randomCreatedDate(),
-    role: randomRole(),
-  },
-  {
-    id: randomId(),
-    name: randomTraderName(),
-    age: 23,
-    joinDate: randomCreatedDate(),
-    role: randomRole(),
-  },
+    player_id: 6,
+    game_id: 1,
+    points: 31,
+    assists: 10,
+    rebounds: 5,
+    blocks: 2,
+    steals: 1
+  }
 ];
 
 function EditToolbar(props) {
   const { setRows, setRowModesModel } = props;
 
   const handleClick = () => {
-    const id = randomId();
-    setRows((oldRows) => [...oldRows, { id, name: '', age: '', isNew: true }]);
+    const id = randomId()
+    setRows((oldRows) => [...oldRows, { id, isNew: true }]);
     setRowModesModel((oldModel) => ({
       ...oldModel,
-      [id]: { mode: GridRowModes.Edit, fieldToFocus: 'name' },
+      [id]: { mode: GridRowModes.Edit, fieldToFocus: 'player_id' },
     }));
   };
 
@@ -85,8 +74,31 @@ function EditToolbar(props) {
 }
 
 export default function FullFeaturedCrudGrid() {
-  const [rows, setRows] = React.useState(initialRows);
+  const [rows, setRows] = React.useState([]);
   const [rowModesModel, setRowModesModel] = React.useState({});
+
+    // Function to fetch the initial data from the server using Axios
+    const fetchInitialData = async () => {
+      try {
+        const response = await axios.get('/stats/get_stats'); // Use Axios for the GET request
+        if (response.status === 200) {
+          const data = response.data;
+  
+          // Assign unique IDs to each row using randomId()
+          const rowsWithIds = data.map((row) => ({ id: randomId(), ...row }));
+  
+          setRows(rowsWithIds);
+        } else {
+          console.error('Failed to fetch initial data');
+        }
+      } catch (error) {
+        console.error('Error fetching initial data:', error);
+      }
+    };
+  
+    React.useEffect(() => {
+      fetchInitialData();
+    }, []);
 
   const handleRowEditStop = (params, event) => {
     if (params.reason === GridRowEditStopReasons.rowFocusOut) {
@@ -102,9 +114,29 @@ export default function FullFeaturedCrudGrid() {
     setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View } });
   };
 
-  const handleDeleteClick = (id) => () => {
-    setRows(rows.filter((row) => row.id !== id));
+  const handleDeleteClick = (id) => async () => {
+    // Find the row in the current rows based on the id
+    const rowToDelete = rows.find((row) => row.id === id);
+  
+    if (rowToDelete) {
+      const { player_id, game_id } = rowToDelete;
+  
+      try {
+        // Send a DELETE request to the server to delete the row with the specified player_id and game_id
+        await axios.delete('/stats/delete_stats', {
+          data: { 'player_id': player_id, 'game_id': game_id },
+        });
+  
+        // If the delete request is successful, update the table to reflect the changes
+        setRows((currentRows) =>
+          currentRows.filter((row) => row.id !== id)
+        );
+      } catch (error) {
+        console.error('Error deleting row:', error);
+      }
+    }
   };
+  
 
   const handleCancelClick = (id) => () => {
     setRowModesModel({
@@ -129,30 +161,69 @@ export default function FullFeaturedCrudGrid() {
   };
 
   const columns = [
-    { field: 'name', headerName: 'Name', width: 180, editable: true },
+    { field: 'player_id', 
+      headerName: 'player_id', 
+      width: 100, 
+      align: 'left',
+      headerAlign: 'left',
+      editable: true,
+      type: 'singleSelect', 
+      valueOptions: player_ids 
+    },
     {
-      field: 'age',
-      headerName: 'Age',
+      field: 'game_id',
+      headerName: 'game_id',
+      width: 100,
+      align: 'left',
+      headerAlign: 'left',
+      editable: true,
+      type: 'singleSelect',
+      valueOptions: game_ids
+    },
+    {
+      field: 'points',
+      headerName: 'points',
       type: 'number',
-      width: 80,
+      width: 100,
       align: 'left',
       headerAlign: 'left',
       editable: true,
     },
     {
-      field: 'joinDate',
-      headerName: 'Join date',
-      type: 'date',
-      width: 180,
+      field: 'assists',
+      headerName: 'assists',
+      type: 'number',
+      width: 100,
+      align: 'left',
+      headerAlign: 'left',
       editable: true,
     },
     {
-      field: 'role',
-      headerName: 'Department',
-      width: 220,
+      field: 'rebounds',
+      headerName: 'rebounds',
+      type: 'number',
+      width: 100,
+      align: 'left',
+      headerAlign: 'left',
       editable: true,
-      type: 'singleSelect',
-      valueOptions: ['Market', 'Finance', 'Development'],
+    },
+    {
+      field: 'blocks',
+      headerName: 'blocks',
+      type: 'number',
+      width: 100,
+      align: 'left',
+      headerAlign: 'left',
+      editable: true,
+    },
+    {
+      field: 'steals',
+      headerName: 'steals',
+      type: 'number',
+      width: 100,
+      align: 'left',
+      headerAlign: 'left',
+      editable: true,
     },
     {
       field: 'actions',
