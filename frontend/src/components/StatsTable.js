@@ -6,7 +6,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/DeleteOutlined';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Close';
-import axios from 'axios'; // Import Axios
+import axios from 'axios'; 
 import {
   GridRowModes,
   DataGrid,
@@ -15,42 +15,8 @@ import {
   GridRowEditStopReasons,
 } from '@mui/x-data-grid';
 import {
-  randomCreatedDate,
-  randomTraderName,
   randomId,
-  randomArrayItem,
 } from '@mui/x-data-grid-generator';
-
-const roles = ['Market', 'Finance', 'Development'];
-const randomRole = () => {
-  return randomArrayItem(roles);
-};
-
-const player_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-const game_ids = [1];
-
-const initialRows = [
-  {
-    id: randomId(),
-    player_id: 1,
-    game_id: 1,
-    points: 16,
-    assists: 3,
-    rebounds: 4,
-    blocks: 0,
-    steals: 0
-  },
-  {
-    id: randomId(),
-    player_id: 6,
-    game_id: 1,
-    points: 31,
-    assists: 10,
-    rebounds: 5,
-    blocks: 2,
-    steals: 1
-  }
-];
 
 function EditToolbar(props) {
   const { setRows, setRowModesModel } = props;
@@ -65,8 +31,9 @@ function EditToolbar(props) {
   };
 
   return (
+    // remove button functionality for add until it works
     <GridToolbarContainer>
-      <Button color="primary" startIcon={<AddIcon />} onClick={handleClick}>
+      <Button color="primary" startIcon={<AddIcon />}>
         Add record
       </Button>
     </GridToolbarContainer>
@@ -76,6 +43,8 @@ function EditToolbar(props) {
 export default function FullFeaturedCrudGrid() {
   const [rows, setRows] = React.useState([]);
   const [rowModesModel, setRowModesModel] = React.useState({});
+  const [playerOptions, setPlayerOptions] = React.useState([]);
+  const [gameOptions, setGameOptions] = React.useState([]);
 
     // Function to fetch the initial data from the server using Axios
     const fetchInitialData = async () => {
@@ -83,10 +52,8 @@ export default function FullFeaturedCrudGrid() {
         const response = await axios.get('/stats/get_stats'); // Use Axios for the GET request
         if (response.status === 200) {
           const data = response.data;
-  
           // Assign unique IDs to each row using randomId()
           const rowsWithIds = data.map((row) => ({ id: randomId(), ...row }));
-  
           setRows(rowsWithIds);
         } else {
           console.error('Failed to fetch initial data');
@@ -95,9 +62,47 @@ export default function FullFeaturedCrudGrid() {
         console.error('Error fetching initial data:', error);
       }
     };
+
+      // Function to fetch player data from the API and create mapping from id to name
+      const fetchPlayerData = () => {
+        axios.get('/player/get_players')
+          .then((response) => {
+            if (Array.isArray(response.data)) {
+              const options = response.data.map((player) => ({
+                // Label for each player id should be the player's name
+                value: player.player_id,
+                label: `${player.first_name} ${player.last_name}`,
+              }));
+              setPlayerOptions(options);
+            }
+          })
+          .catch((error) => {
+            console.error('Error fetching player data:', error);
+          });
+      };
+
+      // Function to fetch game data from the API and create mapping from id to game info
+      const fetchGameData = () => {
+        axios.get('/game/get_games')
+          .then((response) => {
+            if (Array.isArray(response.data)) {
+              const options = response.data.map((game) => ({
+                // Label for each game id should be date, time, location for game
+                value: game.game_id,
+                label: `Date: ${game.date} | Time: ${game.time} | Location: ${game.location}`,
+              }));
+              setGameOptions(options);
+            }
+          })
+          .catch((error) => {
+            console.error('Error fetching dat data:', error);
+          });
+      };
   
     React.useEffect(() => {
       fetchInitialData();
+      fetchPlayerData();
+      fetchGameData();
     }, []);
 
   const handleRowEditStop = (params, event) => {
@@ -115,18 +120,14 @@ export default function FullFeaturedCrudGrid() {
   };
 
   const handleDeleteClick = (id) => async () => {
-    // Find the row in the current rows based on the id
     const rowToDelete = rows.find((row) => row.id === id);
-  
     if (rowToDelete) {
       const { player_id, game_id } = rowToDelete;
   
       try {
-        // Send a DELETE request to the server to delete the row with the specified player_id and game_id
         await axios.delete('/stats/delete_stats', {
           data: { 'player_id': player_id, 'game_id': game_id },
         });
-  
         // If the delete request is successful, update the table to reflect the changes
         setRows((currentRows) =>
           currentRows.filter((row) => row.id !== id)
@@ -151,9 +152,27 @@ export default function FullFeaturedCrudGrid() {
   };
 
   const processRowUpdate = (newRow) => {
-    const updatedRow = { ...newRow, isNew: false };
-    setRows(rows.map((row) => (row.id === newRow.id ? updatedRow : row)));
-    return updatedRow;
+    if (newRow) {
+      const { id, player_id, game_id, points, assists, rebounds, blocks, steals } = newRow;
+      try {
+        axios.put('/stats/edit_stats', {
+          'player_id': player_id, 
+          'game_id': game_id,
+          'points': points,
+          'assists': assists,
+          'rebounds': rebounds,
+          'blocks': blocks,
+          'steals': steals 
+        });
+        // If the update request is successful, update the table to reflect the changes
+        const updatedRow = { ...newRow, isNew: false };
+        setRows(rows.map((row) => (row.id === newRow.id ? updatedRow : row)));
+        return updatedRow;
+      } catch (error) {
+        console.error('Error deleting row:', error);
+        throw error
+      }
+    }
   };
 
   const handleRowModesModelChange = (newRowModesModel) => {
@@ -162,27 +181,27 @@ export default function FullFeaturedCrudGrid() {
 
   const columns = [
     { field: 'player_id', 
-      headerName: 'player_id', 
-      width: 100, 
+      headerName: 'Player', 
+      width: 200, 
       align: 'left',
       headerAlign: 'left',
-      editable: true,
+      editable: false,
       type: 'singleSelect', 
-      valueOptions: player_ids 
+      valueOptions: playerOptions
     },
     {
       field: 'game_id',
-      headerName: 'game_id',
-      width: 100,
+      headerName: 'Game',
+      width: 400,
       align: 'left',
       headerAlign: 'left',
-      editable: true,
+      editable: false,
       type: 'singleSelect',
-      valueOptions: game_ids
+      valueOptions: gameOptions
     },
     {
       field: 'points',
-      headerName: 'points',
+      headerName: 'PTS',
       type: 'number',
       width: 100,
       align: 'left',
@@ -191,7 +210,7 @@ export default function FullFeaturedCrudGrid() {
     },
     {
       field: 'assists',
-      headerName: 'assists',
+      headerName: 'AST',
       type: 'number',
       width: 100,
       align: 'left',
@@ -200,7 +219,7 @@ export default function FullFeaturedCrudGrid() {
     },
     {
       field: 'rebounds',
-      headerName: 'rebounds',
+      headerName: 'REB',
       type: 'number',
       width: 100,
       align: 'left',
@@ -209,7 +228,7 @@ export default function FullFeaturedCrudGrid() {
     },
     {
       field: 'blocks',
-      headerName: 'blocks',
+      headerName: 'BLK',
       type: 'number',
       width: 100,
       align: 'left',
@@ -218,7 +237,7 @@ export default function FullFeaturedCrudGrid() {
     },
     {
       field: 'steals',
-      headerName: 'steals',
+      headerName: 'STL',
       type: 'number',
       width: 100,
       align: 'left',
@@ -294,6 +313,11 @@ export default function FullFeaturedCrudGrid() {
         onRowModesModelChange={handleRowModesModelChange}
         onRowEditStop={handleRowEditStop}
         processRowUpdate={processRowUpdate}
+        onProcessRowUpdateError={(error) => {
+          // Handle the error here, e.g., display a message to the user or log it.
+          console.error('Error updating row:', error);
+          fetchInitialData();
+        }}
         slots={{
           toolbar: EditToolbar,
         }}

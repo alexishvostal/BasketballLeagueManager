@@ -1,14 +1,15 @@
 import database as db
 from flask import Flask, request, jsonify
+from datetime import time, datetime
 
 app = Flask(__name__)
 
 # Connect to database
 db.connect_sqlalchemy()
 
-#@app.route('/')
-#def root():
-#    return "This is the API for BasketballLeagueManager"
+#######################
+## Stats routes      ##
+#######################
 
 @app.route('/stats/get_stats', methods=['GET'])
 def stats_data():
@@ -63,6 +64,50 @@ def delete_stats():
         data['game_id']
     )
     return jsonify({"message": "Stats deleted successfully"}), 200
+
+
+#######################
+## Player routes     ##
+#######################
+
+@app.route('/player/get_players', methods=['GET'])
+def player_data():
+    players = db.get_player_table()
+    players_list = [
+        {
+            "player_id": player.player_id,
+            "team_id": player.team_id,
+            "first_name": player.first_name,
+            "last_name": player.last_name,
+            "position": player.position,
+            "jersey_number": player.jersey_number
+        }
+        for player in players
+    ]
+    return jsonify(players_list)
+
+
+#######################
+## Game routes       ##
+#######################
+
+@app.route('/game/get_games', methods=['GET'])
+def game_data():
+    games = db.get_game_table()
+    games_list = [
+        {
+            "game_id": game.game_id,
+            "date": (game.date).strftime("%m/%d/%y"),
+            "time": (game.time).strftime("%H:%M:%S"),
+            "location": game.location,
+            "home_team_id": game.home_team_id,
+            "home_score": game.home_score,
+            "away_team_id": game.away_team_id,
+            "away_score": game.away_score
+        }
+        for game in games
+    ]
+    return jsonify(games_list)
 
 # Main function - connect to DB and start app
 if __name__ == "__main__":

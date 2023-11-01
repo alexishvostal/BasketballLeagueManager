@@ -100,6 +100,26 @@ def delete_player_stats(player_id, game_id):
     session.commit()
 
 
+############################
+## Player Table Functions ##
+############################
+
+def get_player_table():
+    '''
+    Retrieve all rows in the Player table
+    '''
+    return Player.query.all()
+
+##########################
+## Game Table Functions ##
+##########################
+def get_game_table():
+    '''
+    Retrieve all rows in the Game table
+    '''
+    return Game.query.all()
+
+
 #######################
 ## Testing Functions ##
 #######################    
