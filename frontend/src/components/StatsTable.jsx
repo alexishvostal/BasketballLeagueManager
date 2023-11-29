@@ -40,7 +40,7 @@ function EditToolbar(props) {
   );
 }
 
-export default function FullFeaturedCrudGrid() {
+export default function StatsCrudTable() {
   const [rows, setRows] = React.useState([]);
   const [rowModesModel, setRowModesModel] = React.useState({});
   const [playerOptions, setPlayerOptions] = React.useState([]);
