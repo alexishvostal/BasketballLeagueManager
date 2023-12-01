@@ -218,10 +218,10 @@ def get_team_record(team_id):
     cursor.execute(record_query)
 
     cursor.execute("EXECUTE get_record(%s)", team_id)
-    row = cursor.fetchone()
+    (wins, losses) = cursor.fetchone()
 
     conn.commit()
     cursor.close()
     conn.close()
 
-    return row
+    return (wins, losses)

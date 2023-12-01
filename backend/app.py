@@ -125,6 +125,21 @@ def team_data():
     ]
     return jsonify(teams_list)
 
+#######################
+## Report routes     ##
+#######################
+@app.route('/report/get_record', methods=['GET'])
+def get_record():
+    team_id = request.args.get('team_id')
+    print(team_id)
+    (wins, losses) = db.get_team_record(team_id)
+    record = {
+        'wins': wins,
+        'losses': losses
+    }
+    return jsonify(record)
+
+
 # Main function - connect to DB and start app
 if __name__ == "__main__":
     db.connect_sqlalchemy()
