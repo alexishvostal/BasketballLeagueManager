@@ -225,3 +225,179 @@ def get_team_record(team_id):
     conn.close()
 
     return (wins, losses)
+
+
+def get_team_past_games(team_id):
+    '''
+    Get a summary of a team's performance in their
+    past games (date, opponent, score, w/l)
+    '''
+    conn = connect_database()
+    cursor = conn.cursor()
+
+    games_query = """
+    PREPARE get_past_games(int) AS
+    SELECT
+        g1.date,
+        (ateam1.name) AS opponent,
+        (CONCAT(g1.home_score, ' - ', g1.away_score)) AS score,
+        (CASE WHEN g1.home_score > g1.away_score THEN 'W' ELSE 'L' END) AS wl
+    FROM team hteam1
+        JOIN game g1 ON g1.home_team_id = hteam1.team_id
+        JOIN team ateam1 ON g1.away_team_id = ateam1.team_id
+    WHERE hteam1.team_id = $1
+    UNION
+    SELECT
+        g2.date,
+        (hteam2.name) AS opponent,
+        (CONCAT(g2.away_score, ' - ', g2.home_score)) AS score,
+        (CASE WHEN g2.away_score > g2.home_score THEN 'W' ELSE 'L' END) AS wl
+    FROM team hteam2
+        JOIN game g2 ON g2.home_team_id = hteam2.team_id
+        JOIN team ateam2 ON g2.away_team_id = ateam2.team_id
+    WHERE ateam2.team_id = $1;
+    """
+
+    cursor.execute(games_query)
+
+    cursor.execute("EXECUTE get_past_games(%s)", team_id)
+    past_games = cursor.fetchall()
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return past_games
+
+
+def get_team_roster_stats(team_id):
+    '''
+    Get all the players on a team's roster and
+    their average statistics per game
+    '''
+    conn = connect_database()
+    cursor = conn.cursor()
+
+    roster_query = """
+    PREPARE get_roster_stats(int) AS
+    SELECT
+        MAX(CONCAT(p1.first_name, ' ', p1.last_name)) AS player_name,
+        ROUND(AVG(s1.points), 1) AS PPG,
+        ROUND(AVG(s1.assists), 1) AS APG,
+        ROUND(AVG(s1.rebounds), 1) AS RPG,
+        ROUND(AVG(s1.blocks), 1) AS BPG,
+        ROUND(AVG(s1.steals), 1) AS SPG
+    FROM player p1
+        LEFT OUTER JOIN stats s1 ON p1.player_id = s1.player_id
+    WHERE p1.team_id = $1
+    GROUP BY p1.player_id;
+    """
+
+    cursor.execute(roster_query)
+
+    cursor.execute("EXECUTE get_roster_stats(%s)", team_id)
+    roster = cursor.fetchall()
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return roster
+
+
+def get_team_stats_leaders(team_id):
+    '''
+    Get the players on a team who have the highest
+    average for each per game statistic
+    '''
+    conn = connect_database()
+    cursor = conn.cursor()
+
+    leaders_query = """
+    PREPARE get_stats_leaders(int) AS
+    SELECT
+        'PPG' AS stat_category,
+        temp1.player_name
+    FROM (
+        SELECT
+            MAX(CONCAT(p1.first_name, ' ', p1.last_name)) AS player_name,
+            ROUND(AVG(s1.points), 1) AS PPG
+        FROM player p1
+            JOIN stats s1 ON p1.player_id = s1.player_id
+        WHERE p1.team_id = $1
+        GROUP BY p1.player_id
+        ORDER BY PPG DESC
+        LIMIT 1
+    ) temp1
+    UNION
+    SELECT
+        'APG' AS stat_category,
+        temp2.player_name
+    FROM (
+        SELECT
+            MAX(CONCAT(p2.first_name, ' ', p2.last_name)) AS player_name,
+            ROUND(AVG(s2.assists), 1) AS APG
+        FROM player p2
+            JOIN stats s2 ON p2.player_id = s2.player_id
+        WHERE p2.team_id = $1
+        GROUP BY p2.player_id
+        ORDER BY APG DESC
+        LIMIT 1
+    ) temp2
+    UNION
+    SELECT
+        'RPG' AS stat_category,
+        temp3.player_name
+    FROM (
+        SELECT
+            MAX(CONCAT(p3.first_name, ' ', p3.last_name)) AS player_name,
+            ROUND(AVG(s3.rebounds), 1) AS RPG
+        FROM player p3
+            JOIN stats s3 ON p3.player_id = s3.player_id
+        WHERE p3.team_id = $1
+        GROUP BY p3.player_id
+        ORDER BY RPG DESC
+        LIMIT 1
+    ) temp3
+    UNION
+    SELECT
+        'BPG' AS stat_category,
+        temp4.player_name
+    FROM (
+        SELECT
+            MAX(CONCAT(p4.first_name, ' ', p4.last_name)) AS player_name,
+            ROUND(AVG(s4.blocks), 1) AS BPG
+        FROM player p4
+            JOIN stats s4 ON p4.player_id = s4.player_id
+        WHERE p4.team_id = $1
+        GROUP BY p4.player_id
+        ORDER BY BPG DESC
+        LIMIT 1
+    ) temp4
+    UNION
+    SELECT
+        'SPG' AS stat_category,
+        temp5.player_name
+    FROM (
+        SELECT
+            MAX(CONCAT(p5.first_name, ' ', p5.last_name)) AS player_name,
+            ROUND(AVG(s5.steals), 1) AS SPG
+        FROM player p5
+            JOIN stats s5 ON p5.player_id = s5.player_id
+        WHERE p5.team_id = $1
+        GROUP BY p5.player_id
+        ORDER BY SPG DESC
+        LIMIT 1
+    ) temp5;
+    """
+
+    cursor.execute(leaders_query)
+
+    cursor.execute("EXECUTE get_stats_leaders(%s)", team_id)
+    leaders = cursor.fetchall()
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return leaders
