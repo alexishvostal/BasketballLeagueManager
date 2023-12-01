@@ -131,13 +131,28 @@ def team_data():
 @app.route('/report/get_record', methods=['GET'])
 def get_record():
     team_id = request.args.get('team_id')
-    print(team_id)
     (wins, losses) = db.get_team_record(team_id)
     record = {
         'wins': wins,
         'losses': losses
     }
     return jsonify(record)
+
+@app.route('/report/get_roster', methods=['GET'])
+def get_roster():
+    team_id = request.args.get('team_id')
+    players = db.get_team_roster_stats(team_id)
+    roster_list = [
+        {
+            'player_name': player_name,
+            'ppg': ppg,
+            'apg': apg,
+            'rpg': rpg,
+            'bpg': bpg,
+            'spg': spg
+        } for (player_name, ppg, apg, rpg, bpg, spg) in players
+    ]
+    return jsonify(roster_list)
 
 
 # Main function - connect to DB and start app

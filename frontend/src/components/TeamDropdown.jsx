@@ -29,7 +29,7 @@ export default function TeamDropdown({ selectedTeam, setSelectedTeam }) {
 
   return (
     <div>
-      <h2>Select Team</h2>
+      <h3>Select Team</h3>
 
       <FormControl fullWidth sx={{ mb: 4 }}>
         <InputLabel id="team-label">Team</InputLabel>
