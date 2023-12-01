@@ -1,6 +1,7 @@
 # Connect to Database and define operations
 import os
 from dotenv import load_dotenv
+import psycopg2
 import sqlalchemy
 from sqlalchemy import create_engine, insert
 from sqlalchemy.orm import sessionmaker, scoped_session
@@ -17,6 +18,11 @@ from sample_data.stats import sample_stats
 
 load_dotenv(dotenv_path='C:/Users/Lexie/BasketballLeagueManager/.env')
 db_uri = os.getenv("DB_URI")
+database = os.getenv("DATABASE")
+user = os.getenv("USER")
+password = os.getenv("PASSWORD")
+host = os.getenv("HOST")
+port = os.getenv("PORT")
 if db_uri is None:
     raise Exception("DB_URI is not defined in the .env file")
 
@@ -31,10 +37,26 @@ def connect_sqlalchemy():
     global Base
     Base.metadata.create_all(bind=engine)
 
+
+def connect_database():
+    '''
+    Connect to application's PostgreSQL database
+    '''
+    conn = psycopg2.connect(
+        database=database,
+        user=user,
+        password=password,
+        host=host,
+        port=port
+    )
+    return conn
+
+
 def initialize_tables():
     '''
     Populate database with example instance
     '''
+    connect_sqlalchemy()
     session = scoped_session(sessionmaker(bind=engine))
 
     # Add Teams
@@ -67,6 +89,7 @@ def get_stats_table():
     session.close()
     return stats
 
+
 def add_player_stats(player_id, game_id, points, assists,
                      rebounds, blocks, steals):
     '''
@@ -79,6 +102,7 @@ def add_player_stats(player_id, game_id, points, assists,
     session.add(new)
     session.commit()
     session.close()
+
 
 def edit_player_stats(player_id, game_id, points, assists,
                       rebounds, blocks, steals):
@@ -94,6 +118,7 @@ def edit_player_stats(player_id, game_id, points, assists,
     stat.steals = steals
     session.commit()
     session.close()
+
 
 def delete_player_stats(player_id, game_id):
     '''
@@ -118,6 +143,7 @@ def get_player_table():
     session.close()
     return players
 
+
 ##########################
 ## Game Table Functions ##
 ##########################
@@ -129,3 +155,73 @@ def get_game_table():
     games = session.query(Game).all()
     session.close()
     return games
+
+
+##########################
+## Team Table Functions ##
+##########################
+def get_team_table():
+    '''
+    Retrieve all rows in the Team table
+    '''
+    session = scoped_session(sessionmaker(bind=engine))
+    teams = session.query(Team).all()
+    session.close()
+    return teams
+
+
+######################
+## Report Functions ##
+######################
+def get_team_record(team_id):
+    '''
+    Get a team's win-loss record from their previous games
+    '''
+    conn = connect_database()
+    cursor = conn.cursor()
+
+    record_query = """
+    PREPARE get_record (int) AS
+    SELECT 
+        (tbl.num_home_wins + tbl.num_away_wins) AS wins,
+        (tbl.num_home_losses + tbl.num_away_losses) AS losses
+    FROM (
+        SELECT
+            (
+                SELECT COUNT(*) 
+                FROM game g1 
+                WHERE g1.home_team_id = team.team_id AND 
+                    g1.home_score > g1.away_score
+            ) AS num_home_wins,
+            (
+                SELECT COUNT(*) 
+                FROM game g2
+                WHERE g2.away_team_id = team.team_id AND 
+                    g2.away_score > g2.home_score
+            ) AS num_away_wins,
+            (
+                SELECT COUNT(*) 
+                FROM game g3
+                WHERE g3.home_team_id = team.team_id AND 
+                    g3.home_score < g3.away_score
+            ) AS num_home_losses,
+            (
+                SELECT COUNT(*) 
+                FROM game g4
+                WHERE g4.away_team_id = team.team_id AND 
+                    g4.away_score < g4.home_score
+            ) AS num_away_losses
+        FROM team
+        WHERE team.team_id = $1
+    ) tbl;
+    """
+    cursor.execute(record_query)
+
+    cursor.execute("EXECUTE get_record(%s)", team_id)
+    row = cursor.fetchone()
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return row

@@ -109,6 +109,22 @@ def game_data():
     ]
     return jsonify(games_list)
 
+#######################
+## Team routes       ##
+#######################
+@app.route('/team/get_teams', methods=['GET'])
+def team_data():
+    teams = db.get_team_table()
+    teams_list = [
+        {
+            "team_id": team.team_id,
+            "name": team.name,
+            "coach": team.coach
+        }
+        for team in teams
+    ]
+    return jsonify(teams_list)
+
 # Main function - connect to DB and start app
 if __name__ == "__main__":
     db.connect_sqlalchemy()

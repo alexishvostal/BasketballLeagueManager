@@ -6,5 +6,9 @@ sample_teams = [
     {
         "name": "Oklahoma City Thunder",
         "coach": "Mark Daigneault"
+    },
+    {
+        "name": "Detroit Pistons",
+        "coach": "Monty Williams"
     }
 ]

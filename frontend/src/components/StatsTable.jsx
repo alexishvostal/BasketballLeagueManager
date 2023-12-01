@@ -18,28 +18,6 @@ import {
   randomId,
 } from '@mui/x-data-grid-generator';
 
-function EditToolbar(props) {
-  const { setRows, setRowModesModel } = props;
-
-  const handleClick = () => {
-    const id = randomId()
-    setRows((oldRows) => [...oldRows, { id, isNew: true }]);
-    setRowModesModel((oldModel) => ({
-      ...oldModel,
-      [id]: { mode: GridRowModes.Edit, fieldToFocus: 'player_id' },
-    }));
-  };
-
-  return (
-    // remove button functionality for add until it works
-    <GridToolbarContainer>
-      <Button color="primary" startIcon={<AddIcon />}>
-        Add record
-      </Button>
-    </GridToolbarContainer>
-  );
-}
-
 export default function StatsCrudTable() {
   const [rows, setRows] = React.useState([]);
   const [rowModesModel, setRowModesModel] = React.useState({});
@@ -293,38 +271,35 @@ export default function StatsCrudTable() {
   ];
 
   return (
-    <Box
-      sx={{
-        height: 500,
-        width: '100%',
-        '& .actions': {
-          color: 'text.secondary',
-        },
-        '& .textPrimary': {
-          color: 'text.primary',
-        },
-      }}
-    >
-      <DataGrid
-        rows={rows}
-        columns={columns}
-        editMode="row"
-        rowModesModel={rowModesModel}
-        onRowModesModelChange={handleRowModesModelChange}
-        onRowEditStop={handleRowEditStop}
-        processRowUpdate={processRowUpdate}
-        onProcessRowUpdateError={(error) => {
-          // Handle the error here, e.g., display a message to the user or log it.
-          console.error('Error updating row:', error);
-          fetchInitialData();
+    <div>
+      <h2>Player Game Stats</h2>
+      <Box
+        sx={{
+          height: 500,
+          width: '100%',
+          '& .actions': {
+            color: 'text.secondary',
+          },
+          '& .textPrimary': {
+            color: 'text.primary',
+          },
         }}
-        slots={{
-          toolbar: EditToolbar,
-        }}
-        slotProps={{
-          toolbar: { setRows, setRowModesModel },
-        }}
-      />
-    </Box>
+      >
+        <DataGrid
+          rows={rows}
+          columns={columns}
+          editMode="row"
+          rowModesModel={rowModesModel}
+          onRowModesModelChange={handleRowModesModelChange}
+          onRowEditStop={handleRowEditStop}
+          processRowUpdate={processRowUpdate}
+          onProcessRowUpdateError={(error) => {
+            // Handle the error here, e.g., display a message to the user or log it.
+            console.error('Error updating row:', error);
+            fetchInitialData();
+          }}
+        />
+      </Box>
+    </div>
   );
 }
