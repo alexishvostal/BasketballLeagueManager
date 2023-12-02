@@ -1,7 +1,5 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/DeleteOutlined';
 import SaveIcon from '@mui/icons-material/Save';
@@ -10,7 +8,6 @@ import axios from 'axios';
 import {
   GridRowModes,
   DataGrid,
-  GridToolbarContainer,
   GridActionsCellItem,
   GridRowEditStopReasons,
 } from '@mui/x-data-grid';
@@ -275,7 +272,7 @@ export default function StatsCrudTable() {
       <h2>Player Game Stats</h2>
       <Box
         sx={{
-          height: 500,
+          height: 530,
           width: '100%',
           '& .actions': {
             color: 'text.secondary',
@@ -288,6 +285,8 @@ export default function StatsCrudTable() {
         <DataGrid
           rows={rows}
           columns={columns}
+          pageSize={8}
+          pageSizeOptions={[8]}
           editMode="row"
           rowModesModel={rowModesModel}
           onRowModesModelChange={handleRowModesModelChange}

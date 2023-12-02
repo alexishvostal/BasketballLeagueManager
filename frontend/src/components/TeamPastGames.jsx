@@ -8,13 +8,13 @@ import {
   randomId,
 } from '@mui/x-data-grid-generator';
 
-export default function TeamRoster({selectedTeam}) {
+export default function TeamPastGames({selectedTeam}) {
   const [rows, setRows] = useState([]);
 
-  // Function to fetch team roster from API
-  const fetchTeamRoster = async () => {
+  // Function to fetch team past game results from API
+  const fetchPastGames = async () => {
     try {
-      const response = await axios.get('/report/get_roster', {
+      const response = await axios.get('/report/get_past_games', {
         params: {
           team_id: String(selectedTeam)
         }
@@ -33,53 +33,34 @@ export default function TeamRoster({selectedTeam}) {
   };
 
   useEffect(() => {
-    fetchTeamRoster()
+    fetchPastGames()
   }, [selectedTeam]);
 
   const columns = [
-    { field: 'player_name', 
-      headerName: 'Player', 
-      width: 200, 
+    { field: 'date', 
+      headerName: 'Date', 
+      width: 100, 
       align: 'left',
       headerAlign: 'left'
     },
     {
-      field: 'ppg',
-      headerName: 'PPG',
-      type: 'number',
-      width: 75,
+      field: 'opponent',
+      headerName: 'Opponent',
+      width: 200,
       align: 'left',
       headerAlign: 'left'
     },
     {
-      field: 'apg',
-      headerName: 'APG',
-      type: 'number',
-      width: 75,
+      field: 'score',
+      headerName: 'Score',
+      width: 100,
       align: 'left',
       headerAlign: 'left'
     },
     {
-      field: 'rpg',
-      headerName: 'RPG',
-      type: 'number',
-      width: 75,
-      align: 'left',
-      headerAlign: 'left'
-    },
-    {
-      field: 'bpg',
-      headerName: 'BPG',
-      type: 'number',
-      width: 75,
-      align: 'left',
-      headerAlign: 'left'
-    },
-    {
-      field: 'spg',
-      headerName: 'SPG',
-      type: 'number',
-      width: 75,
+      field: 'wl',
+      headerName: 'W/L',
+      width: 50,
       align: 'left',
       headerAlign: 'left'
     }
@@ -88,15 +69,15 @@ export default function TeamRoster({selectedTeam}) {
   return (
     <Box
       sx={{
-        height: 375,
-        width: 585,
+        height: 215,
+        width: 460,
       }}
     >
       <DataGrid
         rows={rows}
         columns={columns}
-        pageSize={5}
-        pageSizeOptions={[5]}
+        pageSize={2}
+        pageSizeOptions={[2]}
       />
     </Box>
   );

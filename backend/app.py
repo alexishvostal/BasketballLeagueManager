@@ -138,6 +138,20 @@ def get_record():
     }
     return jsonify(record)
 
+@app.route('/report/get_past_games', methods=['GET'])
+def get_past_games():
+    team_id = request.args.get('team_id')
+    past_games = db.get_team_past_games(team_id)
+    past_games_list = [
+        {
+            'date': (date).strftime("%m/%d/%y"),
+            'opponent': opponent,
+            'score': score,
+            'wl': wl
+        } for (date, opponent, score, wl) in past_games
+    ]
+    return jsonify(past_games_list)
+
 @app.route('/report/get_roster', methods=['GET'])
 def get_roster():
     team_id = request.args.get('team_id')
@@ -154,6 +168,17 @@ def get_roster():
     ]
     return jsonify(roster_list)
 
+@app.route('/report/get_stats_leaders', methods=['GET'])
+def get_stats_leaders():
+    team_id = request.args.get('team_id')
+    leaders = db.get_team_stats_leaders(team_id)
+    leaders_list = [
+        {
+            'stat_category': stat_category,
+            'player_name': player_name
+        } for (stat_category, player_name) in leaders
+    ]
+    return jsonify(leaders_list)
 
 # Main function - connect to DB and start app
 if __name__ == "__main__":

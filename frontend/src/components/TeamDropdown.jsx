@@ -28,27 +28,24 @@ export default function TeamDropdown({ selectedTeam, setSelectedTeam }) {
   }, []);
 
   return (
-    <div>
-      <h3>Select Team</h3>
 
-      <FormControl fullWidth sx={{ mb: 4 }}>
-        <InputLabel id="team-label">Team</InputLabel>
-        <Select
-          labelId="team-label"
-          id="team-select"
-          value={selectedTeam}
-          label="Team"
-          onChange={(e) => setSelectedTeam(e.target.value)}
-          required
-        >
-          {teamOptions.map((team) => (
-            <MenuItem key={team.value} value={team.value}>
-              {team.label}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-        
-    </div>
+    <FormControl fullWidth>
+      <InputLabel id="team-label">Team</InputLabel>
+      <Select
+        labelId="team-label"
+        id="team-select"
+        value={selectedTeam}
+        label="Team"
+        onChange={(e) => setSelectedTeam(e.target.value)}
+        required
+      >
+        {teamOptions.map((team) => (
+          <MenuItem key={team.value} value={team.value}>
+            {team.label}
+          </MenuItem>
+        ))}
+      </Select>
+    </FormControl>
+
   );
 }

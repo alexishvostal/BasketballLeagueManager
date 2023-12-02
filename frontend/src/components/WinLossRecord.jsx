@@ -23,8 +23,6 @@ export default function WinLossRecord({selectedTeam}) {
   }, [selectedTeam]);
 
   return (
-    <div>
-      <p><b>Win-Loss Record:</b> {record.wins}-{record.losses}</p>
-    </div>
+    <p><b>Win-Loss Record:</b> {record.wins}-{record.losses}</p>
   );
 };

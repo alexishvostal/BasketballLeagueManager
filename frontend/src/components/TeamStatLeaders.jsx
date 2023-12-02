@@ -8,13 +8,13 @@ import {
   randomId,
 } from '@mui/x-data-grid-generator';
 
-export default function TeamRoster({selectedTeam}) {
+export default function TeamStatLeaders({selectedTeam}) {
   const [rows, setRows] = useState([]);
 
-  // Function to fetch team roster from API
-  const fetchTeamRoster = async () => {
+  // Function to fetch team stats leaders from API
+  const fetchStatsLeaders = async () => {
     try {
-      const response = await axios.get('/report/get_roster', {
+      const response = await axios.get('/report/get_stats_leaders', {
         params: {
           team_id: String(selectedTeam)
         }
@@ -33,53 +33,20 @@ export default function TeamRoster({selectedTeam}) {
   };
 
   useEffect(() => {
-    fetchTeamRoster()
+    fetchStatsLeaders()
   }, [selectedTeam]);
 
   const columns = [
-    { field: 'player_name', 
-      headerName: 'Player', 
-      width: 200, 
+    { field: 'stat_category', 
+      headerName: 'Stat', 
+      width: 100, 
       align: 'left',
       headerAlign: 'left'
     },
     {
-      field: 'ppg',
-      headerName: 'PPG',
-      type: 'number',
-      width: 75,
-      align: 'left',
-      headerAlign: 'left'
-    },
-    {
-      field: 'apg',
-      headerName: 'APG',
-      type: 'number',
-      width: 75,
-      align: 'left',
-      headerAlign: 'left'
-    },
-    {
-      field: 'rpg',
-      headerName: 'RPG',
-      type: 'number',
-      width: 75,
-      align: 'left',
-      headerAlign: 'left'
-    },
-    {
-      field: 'bpg',
-      headerName: 'BPG',
-      type: 'number',
-      width: 75,
-      align: 'left',
-      headerAlign: 'left'
-    },
-    {
-      field: 'spg',
-      headerName: 'SPG',
-      type: 'number',
-      width: 75,
+      field: 'player_name',
+      headerName: 'Player',
+      width: 200,
       align: 'left',
       headerAlign: 'left'
     }
@@ -89,7 +56,7 @@ export default function TeamRoster({selectedTeam}) {
     <Box
       sx={{
         height: 375,
-        width: 585,
+        width: 310,
       }}
     >
       <DataGrid
