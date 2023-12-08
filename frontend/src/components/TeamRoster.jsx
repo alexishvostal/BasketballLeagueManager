@@ -95,8 +95,7 @@ export default function TeamRoster({selectedTeam}) {
       <DataGrid
         rows={rows}
         columns={columns}
-        pageSize={5}
-        pageSizeOptions={[5]}
+        autoPageSize={true}
       />
     </Box>
   );

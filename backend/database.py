@@ -51,6 +51,26 @@ def connect_database():
     )
     return conn
 
+def create_indexes():
+    '''
+    Create indexes in application's PostgreSQL
+    database if they do not already exist
+    '''
+    i1_query = """CREATE INDEX IF NOT EXISTS player_team_index ON Player USING hash (team_id);"""
+    i2_query = """CREATE INDEX IF NOT EXISTS home_team_index ON Game USING hash (home_team_id);"""
+    i3_query = """CREATE INDEX IF NOT EXISTS away_team_index ON Game USING hash (away_team_id);"""
+
+    conn = connect_database()
+    cursor = conn.cursor()
+
+    cursor.execute(i1_query)
+    cursor.execute(i2_query)
+    cursor.execute(i3_query)
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
 
 def initialize_tables():
     '''

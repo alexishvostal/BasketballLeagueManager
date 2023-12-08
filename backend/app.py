@@ -6,6 +6,8 @@ app = Flask(__name__)
 
 # Connect to database
 db.connect_sqlalchemy()
+# Create indexes
+db.create_indexes()
 
 #######################
 ## Stats routes      ##

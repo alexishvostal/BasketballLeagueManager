@@ -62,8 +62,7 @@ export default function TeamStatLeaders({selectedTeam}) {
       <DataGrid
         rows={rows}
         columns={columns}
-        pageSize={5}
-        pageSizeOptions={[5]}
+        autoPageSize={true}
       />
     </Box>
   );

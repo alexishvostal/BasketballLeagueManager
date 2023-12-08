@@ -76,8 +76,7 @@ export default function TeamPastGames({selectedTeam}) {
       <DataGrid
         rows={rows}
         columns={columns}
-        pageSize={2}
-        pageSizeOptions={[2]}
+        autoPageSize={true}
       />
     </Box>
   );

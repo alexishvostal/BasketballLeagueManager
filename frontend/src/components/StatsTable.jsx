@@ -285,8 +285,7 @@ export default function StatsCrudTable() {
         <DataGrid
           rows={rows}
           columns={columns}
-          pageSize={8}
-          pageSizeOptions={[8]}
+          autoPageSize={true}
           editMode="row"
           rowModesModel={rowModesModel}
           onRowModesModelChange={handleRowModesModelChange}
