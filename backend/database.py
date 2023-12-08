@@ -51,26 +51,6 @@ def connect_database():
     )
     return conn
 
-def create_indexes():
-    '''
-    Create indexes in application's PostgreSQL
-    database if they do not already exist
-    '''
-    i1_query = """CREATE INDEX IF NOT EXISTS player_team_index ON Player USING hash (team_id);"""
-    i2_query = """CREATE INDEX IF NOT EXISTS home_team_index ON Game USING hash (home_team_id);"""
-    i3_query = """CREATE INDEX IF NOT EXISTS away_team_index ON Game USING hash (away_team_id);"""
-
-    conn = connect_database()
-    cursor = conn.cursor()
-
-    cursor.execute(i1_query)
-    cursor.execute(i2_query)
-    cursor.execute(i3_query)
-
-    conn.commit()
-    cursor.close()
-    conn.close()
-
 
 def initialize_tables():
     '''
@@ -96,6 +76,31 @@ def initialize_tables():
     session.close()
 
 
+#############
+## INDEXES ##
+#############
+
+def create_indexes():
+    '''
+    Create indexes in application's PostgreSQL
+    database if they do not already exist
+    '''
+    i1_query = """CREATE INDEX IF NOT EXISTS player_team_index ON Player USING hash (team_id);"""
+    i2_query = """CREATE INDEX IF NOT EXISTS home_team_index ON Game USING hash (home_team_id);"""
+    i3_query = """CREATE INDEX IF NOT EXISTS away_team_index ON Game USING hash (away_team_id);"""
+
+    conn = connect_database()
+    cursor = conn.cursor()
+
+    cursor.execute(i1_query)
+    cursor.execute(i2_query)
+    cursor.execute(i3_query)
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+
 #################################
 ## Stats Table CRUD Operations ##
 #################################
@@ -116,12 +121,22 @@ def add_player_stats(player_id, game_id, points, assists,
     Add a player's stats for a game to the Stats table
     '''
     session = scoped_session(sessionmaker(bind=engine))
-    new = Stats(player_id=player_id, game_id=game_id, points=points,
-                assists=assists, rebounds=rebounds, blocks=blocks,
-                steals=steals)
-    session.add(new)
-    session.commit()
-    session.close()
+    ## TRANSACTION
+    try:
+        # REPEATABLE READ isolation level for transaction
+        session.begin()
+        session.connection(execution_options={"isolation_level": "REPEATABLE READ"})
+        new = Stats(player_id=player_id, game_id=game_id, points=points,
+                    assists=assists, rebounds=rebounds, blocks=blocks,
+                    steals=steals)
+        session.add(new)
+        # commit transaction on success
+        session.commit()
+    except:
+        # abort (rollback) transaction on failure
+        session.rollback()
+    finally:
+        session.close()
 
 
 def edit_player_stats(player_id, game_id, points, assists,
@@ -130,14 +145,24 @@ def edit_player_stats(player_id, game_id, points, assists,
     Edit a player's stats for a game in the Stats table
     '''
     session = scoped_session(sessionmaker(bind=engine))
-    stat = session.query(Stats).filter_by(player_id=player_id, game_id=game_id).first()
-    stat.points = points
-    stat.assists = assists
-    stat.rebounds = rebounds
-    stat.blocks = blocks
-    stat.steals = steals
-    session.commit()
-    session.close()
+    ## TRANSACTION
+    try:
+        # READ COMMITTED isolation level for transaction
+        session.begin()
+        session.connection(execution_options={"isolation_level": "READ COMMITTED"})
+        stat = session.query(Stats).filter_by(player_id=player_id, game_id=game_id).first()
+        stat.points = points
+        stat.assists = assists
+        stat.rebounds = rebounds
+        stat.blocks = blocks
+        stat.steals = steals
+        # commit transaction on success
+        session.commit()
+    except:
+        # abort (rollback) transaction on failure
+        session.rollback()
+    finally:
+        session.close()
 
 
 def delete_player_stats(player_id, game_id):
@@ -145,9 +170,19 @@ def delete_player_stats(player_id, game_id):
     Delete a player's stats for a game in the Stats table
     '''
     session = scoped_session(sessionmaker(bind=engine))
-    session.query(Stats).filter_by(player_id=player_id, game_id=game_id).delete()
-    session.commit()
-    session.close()
+    ## TRANSACTION
+    try:
+        # READ COMMITTED isolation level for transaction
+        session.begin()
+        session.connection(execution_options={"isolation_level": "READ COMMITTED"})
+        session.query(Stats).filter_by(player_id=player_id, game_id=game_id).delete()
+        # commit transaction on success
+        session.commit()
+    except:
+        # abort (rollback) transaction on failure
+        session.rollback()
+    finally:
+        session.close()
 
 
 ############################
